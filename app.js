@@ -1,98 +1,104 @@
-var express = require('express');
-var path = require('path');
-var favicon = require('serve-favicon');
-var logger = require('morgan');
-var bodyParser = require('body-parser');
-var lessMiddleware = require('less-middleware');
-var MongoClient = require('mongodb').MongoClient
-  , assert = require('assert');
+// Importing necessary modules and packages
+var express = require("express");
+var path = require("path");
+var favicon = require("serve-favicon");
+var logger = require("morgan");
+var bodyParser = require("body-parser");
+var lessMiddleware = require("less-middleware");
+var MongoClient = require("mongodb").MongoClient,
+  assert = require("assert");
 
-var host = process.env.DB_HOST ? process.env.DB_HOST : 'localhost';
-var url = 'mongodb://' + host + ':27017/accumulator';
+// Setting up MongoDB connection parameters based on environment variables
+var host = process.env.DB_HOST ? process.env.DB_HOST : "localhost";
+var url = "mongodb://" + host + ":27017/accumulator";
 var db;
-var index = require('./routes/index');
 
+// Importing the 'index' route module
+var index = require("./routes/index");
+
+// Setting the process title
 process.title = "ca-app";
 
-var environment = process.env.NODE_ENV ? process.env.NODE_ENV : 'development';
+// Setting the environment based on the NODE_ENV environment variable
+var environment = process.env.NODE_ENV ? process.env.NODE_ENV : "development";
 environment = environment.trim();
-console.log('NODE_ENV: ' + environment);
+console.log("NODE_ENV: " + environment);
 
+// Creating an instance of the Express application
 var app = express();
 
+// Connecting to MongoDB
 MongoClient.connect(url, function (err, mongoDb) {
   assert.equal(null, err);
   console.log("Connected to database");
-
   db = mongoDb;
 });
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
-if (environment === 'development') {
+// Configuring view engine and middleware for development environment
+app.set("views", path.join(__dirname, "views"));
+app.set("view engine", "jade");
+if (environment === "development") {
   app.locals.pretty = true;
 }
 
-
-// uncomment after placing your favicon in /public
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
-app.use(logger('dev'));
+// Configuring middleware for logging, parsing requests, and serving static files
+app.use(logger("dev"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(lessMiddleware(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(lessMiddleware(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "public")));
 
-app.use('/', index);
+// Using the 'index' route module for the root path
+app.use("/", index);
 
+// Function to insert a document into the MongoDB collection
 var insertDocument = function (db, document, callback) {
-  var collection = db.collection('documents');
+  var collection = db.collection("documents");
   collection.insertOne(document, function (err, result) {
     callback(err, JSON.stringify(result.ops[0]));
   });
 };
 
+// Function to find all documents in the MongoDB collection
 var findAllDocuments = function (db, callback) {
-  var collection = db.collection('documents');
+  var collection = db.collection("documents");
   collection.find({}).toArray(function (err, result) {
-    if(result) {
+    if (result) {
       result = result.reverse();
     }
     callback(err, result);
   });
-}
+};
 
-// Insert message
-app.post('/api', function (req, res) {
+// Endpoint to insert a message into the MongoDB collection
+app.post("/api", function (req, res) {
   var data = req.body;
   insertDocument(db, data, function (err, result) {
-    res.status(201).send(result)
-  })
+    res.status(201).send(result);
+  });
 });
 
-// Get messages
-app.get('/api', function (req, res) {
+// Endpoint to get messages from the MongoDB collection
+app.get("/api", function (req, res) {
   findAllDocuments(db, function (err, result) {
     res.send(result);
   });
 });
 
-// catch 404 and forward to error handler
+// Handling 404 errors by forwarding to error handler
 app.use(function (req, res, next) {
-  var err = new Error('Not Found');
+  var err = new Error("Not Found");
   err.status = 404;
   next(err);
 });
 
-// error handler
+// Error handler for development environment
 app.use(function (err, req, res, next) {
-  // set locals, only providing error in development
   res.locals.message = err.message;
-  res.locals.error = environment === 'development' ? err : {};
-
-  // render the error page
+  res.locals.error = environment === "development" ? err : {};
   res.status(err.status || 500);
-  res.render('error');
+  res.render("error");
 });
 
+// Exporting the Express application
 module.exports = app;

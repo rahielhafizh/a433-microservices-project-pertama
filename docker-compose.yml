@@ -1,0 +1,25 @@
+version: "2"
+
+services:
+  item-db:
+    image: mongo:3 # Menggunakan gambar Docker dari MongoDB versi 3
+    volumes:
+      - app-db:/data/db # Membuat volume Docker dengan nama "app-db" dan mengaitkannya dengan direktori "/data/db" di dalam kontainer, digunakan untuk menyimpan data MongoDB
+    restart: always # Selalu mencoba untuk memulai ulang kontainer jika terhenti
+
+  item-app:
+    image: rahielhfz/item-app:item-app-v1 # Menggunakan gambar Docker yang telah diunggah ke Docker Hub dengan nama "item-app" dan tag "item-app-v1"
+    ports:
+      - "80:80" # Meneruskan port 80 di host ke port 80 di dalam kontainer
+    depends_on:
+      - item-db # Menunggu kontainer "item-db" untuk selesai sebelum menjalankan kontainer "item-app"
+    restart: always # Selalu mencoba untuk memulai ulang kontainer jika terhenti
+
+    logging: # Konfigurasi logging untuk kontainer "item-app"
+      driver: "json-file" # Menggunakan driver "json-file" untuk logging
+      options:
+        max-size: "5m" # Membatasi ukuran file log hingga 5 mb
+        max-file: "5" # Membatasi jumlah file log yang akan disimpan hingga 5 file
+
+volumes:
+  app-db: # Definisi volume "app-db"
