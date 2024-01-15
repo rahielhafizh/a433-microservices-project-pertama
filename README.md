@@ -1,5 +1,4 @@
-# a433-microservices
-Repository ini digunakan untuk kebutuhan kelas Belajar Membangun Arsitektur Microservices
+#a433-microservices
+This repository is used for the needs of the Learning to Build Microservices Architecture class
 
-Silakan clone dengan perintah berikut.<br>
-`git clone -b proyek-pertama https://github.com/dicodingacademy/a433-microservices.git`
+This project uses Docker Compose to deploy the Item App application. Using code provided from GitHub, I created a Dockerfile and a shell script called `build_push_image.sh` to build and upload the image to Docker Hub. And also create a `docker-compose.yml` file that configures `item-app` and `item-db` services.
